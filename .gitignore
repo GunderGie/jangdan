@@ -1,0 +1,32 @@
+# 로컬 문서: 1인 프로젝트라 작업 규약과 설계 문서는 커밋하지 않는다.
+/AGENTS.md
+/CLAUDE.md
+/docs/
+/.claude/
+
+# 원시 데이터: 저장소 밖(../원시데이터(사전, 말뭉치 등)/)에 둔다. 실수로 복사한 경우를 막는다.
+원시데이터*/
+*.zip
+
+# 전처리 산출물과 캐시
+data/
+.cache/
+*.pkl
+
+# 비밀 값
+.env
+.env.*
+
+# 가상환경
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# OS
+Thumbs.db
+desktop.ini
