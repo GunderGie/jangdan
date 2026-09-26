@@ -19,6 +19,16 @@
 
 (추가예정)
 
+## 실행
+
+1. 의존성을 설치합니다(Python 3.12): `pip install -r requirements.txt`
+2. 사전 DB를 만듭니다: `python -m prep.build`. 원시 데이터 폴더는 `JANGDAN_RAW_DIR`로 바꿀 수 있습니다.
+3. `.env`에 설정을 넣습니다.
+   - `GEMINI_API_KEY`: 동형어 판별에 쓰는 LLM 키입니다. 없으면 판별이 필요한 단어를 그대로 둡니다.
+   - `JANGDAN_DB_SOURCE=turso`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`: 로컬 DB 대신 Turso를 읽습니다.
+4. 서버를 켭니다: `uvicorn api.main:create_app --factory`
+5. `POST /api/analyze`에 `{"text": "원고"}`를 보내면 장음 표시 결과와 근거를 돌려줍니다. `http://localhost:8000/docs`에서 시험할 수 있습니다.
+
 ## 데이터
 
 - 국립국어원의 한국어기초사전과 표준국어대사전의 전체 내려받기 파일을 사용합니다.
