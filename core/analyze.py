@@ -20,6 +20,7 @@ POS = {"NNG": [("명사",)], "NNP": [("명사",)], "NNB": [("의존 명사",), (
 XR_POS = {"XSA": [("형용사",)], "XSV": [("동사",)]}  # 어근 + -하다 등은 접미사로 품사를 정한다
 VERBS = {"VV", "VA", "VX"}
 COMPOUND = {"NNG", "NNP", "XPN"}  # 붙여 쓴 합성어는 이어 붙인 표기를 먼저 찾는다
+MAX_FORM = 16  # 사전에서 가장 긴 표기의 글자 수. 붙여 쓴 명사는 이보다 길게 잇지 않는다
 # 제6항 [붙임]: (어간 모음, 줄어든 음절 모음). 하여→해는 어간이 '하'일 때만 본다.
 CONTRACT = {("ㅗ", "ㅘ"), ("ㅜ", "ㅝ"), ("ㅣ", "ㅕ"), ("ㅚ", "ㅙ")}
 CONTRACT_SHORT = {("ㅇ", "ㅘ"), ("ㅈ", "ㅕ"), ("ㅉ", "ㅕ"), ("ㅊ", "ㅕ")}  # 와, 져, 쪄, 쳐(다만)
@@ -119,6 +120,7 @@ class Analyzer:
 
     def analyze(self, text):
         toks = self.kiwi.tokenize(text)
+        self.lex.prefetch(*self._lookups(toks))
         firsts = {m.start() for m in re.finditer(r"\w+", text)}  # 어절 첫머리: 공백·문장부호 다음 글자
         spans = {}
         for t in toks:
@@ -151,11 +153,37 @@ class Analyzer:
             it.sentence = order[it.sentence]
         return Analysis(text, items, [spans[k] for k in sorted(spans)])
 
+    @staticmethod
+    def _lookups(toks):
+        """analyze가 사전에서 찾을 표기와 용언 원형(넉넉히). 원격 DB에서 한 번에 조회하려고 미리 모은다."""
+        forms, lemmas = set(), set()
+        for i, t in enumerate(toks):
+            tag = t.tag.split("-")[0]
+            nxt = toks[i + 1] if i + 1 < len(toks) else None
+            if tag in POS and tag not in VERBS:  # 기호 토큰의 form은 읽지 않는다(짝 없는 서로게이트면 Kiwi가 예외를 낸다)
+                forms.add(t.form)
+            if tag in VERBS:
+                lemma = t.lemma or t.form + "다"
+                forms.add(lemma)
+                lemmas.add(lemma)
+            if tag == "XR" and nxt is not None and nxt.tag[:3] in XR_POS:
+                forms.add(t.form + nxt.form + "다")
+            if tag in COMPOUND:  # _compound와 같은 방식으로 이어 붙인 표기
+                form, j = t.form, i
+                while j + 1 < len(toks) and toks[j + 1].tag.split("-")[0] in ("NNG", "NNP") \
+                        and toks[j + 1].start == toks[j].start + toks[j].len \
+                        and len(form) + len(toks[j + 1].form) <= MAX_FORM:
+                    j += 1
+                    form += toks[j].form
+                    forms.add(form)
+        return forms, lemmas
+
     def _compound(self, text, toks, i, firsts):
         """붙여 쓴 명사(접두사 포함)를 이어 붙인 가장 긴 등재 표기. 없으면 None."""
         form, best, j = toks[i].form, None, i
         while j + 1 < len(toks) and toks[j + 1].tag.split("-")[0] in ("NNG", "NNP") \
-                and toks[j + 1].start == toks[j].start + toks[j].len:
+                and toks[j + 1].start == toks[j].start + toks[j].len \
+                and len(form) + len(toks[j + 1].form) <= MAX_FORM:
             j += 1
             form += toks[j].form
             if self.lex.entries(form):

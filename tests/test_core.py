@@ -127,6 +127,36 @@ def test_conj_pron_matches_pos(analyzer):
     assert it.status == "short" and "다름" in it.note  # 표준은 찌다02 쪄[쩌ː], C안 후보(기초)는 단음
 
 
+def test_lookups_prefetched(analyzer):
+    """원격 DB를 위해 원고 하나의 사전 조회를 한 번에 모은다: 항목 1회, 활용 발음 1회."""
+    from core.analyze import Analyzer
+    from core.lexicon import Lexicon
+    lex, sqls = Lexicon(), []
+    query = lex._query
+    lex._query = lambda sql, args=(): sqls.append(sql) or query(sql, args)
+    text = " ".join(t for t, _, _ in REFERENCE) + " 회사사람들이 왔다. 사과나무를 심었다. 너무 조용해서 행복했다."
+    a = Analyzer(lex, analyzer.kiwi)
+    rendered = a.analyze(text).render()
+    assert len(sqls) == 2 and rendered == analyzer.analyze(text).render()
+    forms, _ = a._lookups(a.kiwi.tokenize("사람" * 500))  # 붙여 쓴 명사는 사전의 가장 긴 표기(16자)까지만 잇는다
+    assert max(map(len, forms)) <= 16 and len(forms) < 20
+
+
+def test_max_form_matches_db(analyzer):
+    from core.analyze import MAX_FORM
+    assert analyzer.lex._query("select max(length(form)) from entry") == [(MAX_FORM,)]  # DB를 다시 만들면 함께 고친다
+
+
+def test_prefetch_chunks(analyzer, monkeypatch):
+    from core.analyze import Analyzer
+    from core.lexicon import Lexicon
+    monkeypatch.setattr("core.lexicon.CHUNK", 2)
+    text = "하늘에서 눈이 내린다. 그 사실을 압니다. 사람이 많아 보인다. 서울에 사는 사람"
+    a = Analyzer(Lexicon(), analyzer.kiwi)
+    assert a.analyze(text).to_dict() == analyzer.analyze(text).to_dict()
+    assert a.lex.entries("") == ()
+
+
 def test_to_dict_and_threads(analyzer):
     import json
     import threading
