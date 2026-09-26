@@ -1,3 +1,6 @@
 kiwipiepy==0.23.2
 jamo==0.4.1
 pytest==9.1.1
+google-genai==2.25.0
+httpx==0.28.1
+python-dotenv==1.2.3
