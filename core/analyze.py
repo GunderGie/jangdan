@@ -1,4 +1,4 @@
-"""원고에서 장음 음절과 근거를 찾는다(기획안 5절 1~5단계와 7단계). LLM 판별은 붙이지 않는다.
+"""원고에서 장음 음절과 근거를 찾는다(기획안 5절 1~5단계와 7단계). LLM 판별(6단계)은 judge.py가 한다.
 
 1. 형태소 분석: Kiwi가 어간을 원형으로 복원하고 원문 위치(start, len)를 준다.
 2. 사전 조회: 원형(표기)과 품사로 동형어 후보를 찾는다.
@@ -36,13 +36,28 @@ class Item:
     pos_names: tuple
     status: str = ""                                # long | short | undecided | unknown
     reason: str = ""
-    method: str | None = None                       # dictionary | rule
+    method: str | None = None                       # dictionary | rule | llm
     long_positions: list = field(default_factory=list)
     candidates: list = field(default_factory=list)  # [(Candidate, 규칙을 적용한 장음 여부)]
     chosen: object = None                           # Candidate
     regularity: str | None = None                   # Kiwi의 규칙·불규칙 표시(-R/-I)
     conj_pron: str | None = None                    # 표준국어대사전 활용 발음(있을 때)
     note: str | None = None
+    stem_len: int | None = None                     # 용언: 원문에 보이는 어간 길이(장음 표시 범위)
+
+    def choose(self, k, method, reason):
+        """후보 k(0부터)를 고른 결과로 장단을 정한다(LLM 판별)."""
+        c, v = self.candidates[k]
+        self.chosen, self.method, self.reason = c, method, reason
+        if v is None:
+            self.status, self.reason, self.long_positions = "unknown", reason + " / 고른 동형어에 발음 정보 없음", []
+        elif v:
+            self.status, self.long_positions = "long", Analyzer._positions(self, [(c, v)], self.stem_len)
+        else:
+            self.status, self.long_positions = "short", []
+        if not v:  # 표준국어대사전 활용 발음은 장음 용언만 모았으므로 고른 동형어의 것이 아니다
+            self.conj_pron = None
+        self.note = _conj_note(self)
 
     def to_dict(self):
         return {"start": self.start, "end": self.end, "surface": self.surface, "lemma": self.lemma, "tag": self.tag,
@@ -88,6 +103,13 @@ def _jamo(ch):
 def _vowel_initial(form):
     j = _jamo(form[:1])
     return j is not None and j[0] == "ㅇ"
+
+
+def _conj_note(item):
+    """결과가 표준국어대사전 활용 발음의 장단과 다르면 표시한다(어절 첫머리 용언)."""
+    if item.conj_pron and item.status in ("long", "short") and ("ː" in item.conj_pron) != (item.status == "long"):
+        return "표준국어대사전 활용 발음과 다름(C안에서 기초사전 발음을 따름)"
+    return None
 
 
 class Analyzer:
@@ -214,13 +236,12 @@ class Analyzer:
         item.conj_pron = self.lex.conj_pron(lemma, surface, set().union(*(c.pos_parts for c in cands)))
         initial = t.start in firsts
         item = self._judge(item, lengths, initial, method, reason, stem_len=t.len)
-        if initial and item.conj_pron and item.status in ("long", "short") \
-                and ("ː" in item.conj_pron) != (item.status == "long"):
-            item.note = "표준국어대사전 활용 발음과 다름(C안에서 기초사전 발음을 따름)"
+        if initial:
+            item.note = _conj_note(item)
         return item
 
     def _judge(self, item, lengths, initial, method, reason, stem_len=None):
-        item.candidates = lengths
+        item.candidates, item.stem_len = lengths, stem_len
         known = {v for _, v in lengths if v is not None}
         if len(lengths) == 1:
             item.chosen = lengths[0][0]
