@@ -53,7 +53,7 @@ def test_without_llm(client):
     assert len(snow["candidates"]) == 5
 
 
-@pytest.mark.parametrize("text", ["", "가" * 2001])
+@pytest.mark.parametrize("text", ["", "가" * 2001], ids=["empty", "2001chars"])
 def test_text_length(client, text):
     r = client[0].post("/api/analyze", json={"text": text})
     assert r.status_code == 422 and "가가" not in r.text  # 입력을 되돌려 주지 않는다
