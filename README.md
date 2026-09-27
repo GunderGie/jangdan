@@ -26,8 +26,9 @@
 3. `.env`에 설정을 넣습니다.
    - `GEMINI_API_KEY`: 동형어 판별에 쓰는 LLM 키입니다. 없으면 판별이 필요한 단어를 그대로 둡니다.
    - `JANGDAN_DB_SOURCE=turso`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`: 로컬 DB 대신 Turso를 읽습니다.
-4. 서버를 켭니다: `uvicorn api.main:create_app --factory`
-5. `POST /api/analyze`에 `{"text": "원고"}`를 보내면 장음 표시 결과와 근거를 돌려줍니다. `http://localhost:8000/docs`에서 시험할 수 있습니다.
+4. 화면을 빌드합니다(Node.js 22.12 이상): `web` 폴더에서 `npm install`, `npm run build`
+5. 서버를 켭니다: `uvicorn api.main:create_app --factory`. `http://localhost:8000`에서 화면이 열립니다.
+6. API만 쓸 때는 `POST /api/analyze`에 `{"text": "원고"}`를 보내면 장음 표시 결과와 근거를 돌려줍니다. `http://localhost:8000/docs`에서 시험할 수 있습니다.
 
 ## 데이터
 

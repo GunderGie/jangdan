@@ -1,0 +1,181 @@
+/* 대본 용지와 편집자의 빨강·파랑 색연필 */
+:root {
+  --paper: #eef2f6;    /* 대본을 올려 둔 책상 */
+  --sheet: #ffffff;    /* 대본 용지 */
+  --rule: #dbe4ee;     /* 용지의 푸른 괘선 */
+  --ink: #1c222a;      /* 인쇄된 글자 */
+  --graphite: #5f6877; /* 연필: 판별 필요, 보조 글자(바탕 대비 4.5:1 이상) */
+  --red: #d4412c;      /* 빨강 색연필: 장음 */
+  --blue: #2b53c4;     /* 파랑 색연필: 문맥 판별 */
+  --marker: #fff0bf;   /* 형광펜: 고른 단어 */
+  --script: 'Gowun Batang', 'Nanum Myeongjo', serif;
+  --ui: 'IBM Plex Sans KR', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --fs: 19px;
+  --lh: calc(var(--fs) * 2.2);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--ui); }
+button { font: inherit; }
+
+.page { max-width: 680px; margin: 0 auto; padding: 28px 16px 48px; }
+
+.masthead h1 {
+  font-family: var(--script);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  margin: 10px 0 2px;
+}
+.masthead p { margin: 0 0 24px; color: var(--graphite); font-size: 15px; line-height: 1.6; }
+
+.eyebrow { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: var(--graphite); }
+
+/* 괘선은 줄 상자 아래에 한 줄씩 긋는다 */
+.sheet {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: calc(var(--lh) * 0.35) 20px calc(var(--lh) * 0.5);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background-color: var(--sheet);
+  background-image: linear-gradient(to bottom, transparent calc(var(--lh) - 1px), var(--rule) calc(var(--lh) - 1px));
+  background-size: 100% var(--lh);
+  background-origin: content-box;
+  box-shadow: 0 1px 0 #d3dbe5, 0 12px 28px -18px rgba(28, 34, 42, 0.35);
+  color: var(--ink);
+  font-family: var(--script);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+textarea.sheet { min-height: calc(var(--lh) * 7 + var(--lh) * 0.85); resize: vertical; }
+textarea.sheet:focus { outline: 2px solid var(--blue); outline-offset: 2px; }
+textarea.sheet::placeholder { color: #6b7380; }
+
+.row { display: flex; justify-content: space-between; align-items: center; margin: 8px 2px 16px; font-size: 14px; }
+.counter { color: var(--graphite); font-family: var(--mono); font-size: 13px; }
+.counter.over { color: #b3321f; font-weight: 500; }
+.result:focus { outline: none; } /* 결과가 나오면 스크린 리더가 읽도록 포커스만 옮긴다 */
+
+.toggle { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; font-size: 15px; }
+.toggle input { width: 20px; height: 20px; accent-color: var(--blue); }
+
+.primary, .secondary {
+  min-height: 50px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.primary { width: 100%; border: 0; background: var(--ink); color: #fff; }
+.primary:disabled { background: #a9b1bc; cursor: default; }
+.secondary { border: 1px solid #c3ccd7; background: var(--sheet); color: var(--ink); }
+.primary:focus-visible, .secondary:focus-visible, .link:focus-visible, .close:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.link { border: 0; padding: 4px 0; background: none; color: var(--blue); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* 장음: 음절 뒤에 빨강으로 ː를 넣는다. 읽는 순서대로 나타난다 */
+.mark {
+  color: var(--red);
+  font-weight: 700;
+  animation: appear 0.25s ease-out both;
+  animation-delay: min(calc(var(--i, 0) * 45ms), 700ms);
+}
+@keyframes appear { from { opacity: 0; } }
+.syl { white-space: nowrap; }
+.word .mark { display: inline-block; } /* 밑줄·점선이 ː 아래로 이어지지 않게 */ /* 음절과 ː가 줄 끝에서 떨어지지 않게 */
+.script { word-break: keep-all; } /* 원고는 어절 단위로 줄을 바꾼다 */
+.logo-tri { color: var(--red); font-size: 0.5em; vertical-align: 0.3em; margin: 0 0.12em; }
+
+.word { border-radius: 3px; cursor: pointer; }
+.word:hover { background: #edf2f8; }
+.word:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.word.by-llm { text-decoration: underline solid var(--blue) 1.5px; text-underline-offset: 7px; }
+.word.undecided { text-decoration: underline dotted var(--graphite) 2px; text-underline-offset: 7px; }
+.word.picked { background: var(--marker); }
+
+.tally { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 2px 12px; font-size: 14px; color: var(--graphite); }
+.tally span { display: inline-flex; align-items: center; gap: 7px; }
+.swatch { display: inline-block; width: 16px; }
+.long-swatch { width: auto; color: var(--red); font-weight: 700; }
+.llm-swatch { height: 2px; background: var(--blue); }
+.undecided-swatch { height: 0; border-top: 2px dotted var(--graphite); }
+
+.retry { margin: 0 2px 12px; color: #8e2a1c; font-size: 14px; }
+.retry .link { color: #8e2a1c; }
+.hint { margin: 10px 2px 18px; color: var(--graphite); font-size: 14px; }
+.actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+
+.error { margin: 16px 0 0; padding: 12px 14px; border-left: 3px solid var(--red); background: #fdf1ef; color: #8e2a1c; font-size: 15px; line-height: 1.5; }
+
+.notice { margin-top: 32px; color: var(--graphite); font-size: 13px; line-height: 1.6; }
+.notice summary { cursor: pointer; font-weight: 500; }
+.notice ul { margin: 8px 0 0; padding-left: 18px; }
+.colophon { margin-top: 12px; color: var(--graphite); font-size: 12px; line-height: 1.6; }
+
+.manual { margin-top: 14px; font-size: 14px; line-height: 1.5; }
+.manual textarea { display: block; width: 100%; min-height: 120px; margin-top: 6px; padding: 10px; border: 1px solid #c3ccd7; border-radius: 6px; font-family: var(--script); font-size: 16px; }
+
+/* 근거(dialog): 휴대폰에서는 아래에서 올라오고, 넓은 화면에서는 가운데 뜬다 */
+.evidence {
+  width: 100%;
+  max-width: min(680px, 100%);
+  max-height: 84vh;
+  max-height: 84dvh;
+  margin: auto auto 0;
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: 16px 16px 0 0;
+  background: var(--sheet);
+  color: var(--ink);
+  box-shadow: 0 -10px 30px rgba(20, 26, 34, 0.16);
+  animation: rise 0.22s ease-out;
+}
+.evidence::backdrop { background: rgba(20, 26, 34, 0.38); }
+.evidence-body { padding: 18px 20px 28px; }
+@keyframes rise { from { transform: translateY(24px); opacity: 0; } }
+@media (min-width: 720px) {
+  .evidence { margin: auto; border-radius: 16px; }
+}
+.evidence header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.evidence h2 { margin: 0; font-family: var(--script); font-size: 30px; font-weight: 700; }
+.verdict { padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.verdict.long { background: #fbe4df; color: #9c2c1b; }
+.verdict.short { background: #e9eef4; color: #3e4855; }
+.verdict.undecided, .verdict.unknown { background: #f1f1ee; color: var(--graphite); }
+.close { margin-left: auto; width: 40px; height: 40px; border: 0; border-radius: 50%; background: #eef2f6; font-size: 22px; line-height: 1; cursor: pointer; }
+
+.evidence dl { display: grid; grid-template-columns: 5em 1fr; gap: 10px 12px; margin: 0 0 8px; font-size: 15px; line-height: 1.55; }
+.evidence dt { color: var(--graphite); font-size: 13px; padding-top: 2px; }
+.evidence dd { margin: 0; }
+.minor { color: var(--graphite); font-size: 13px; }
+.note { margin: 4px 0 0; color: #8a5a00; font-size: 13px; }
+.evidence h3 { margin: 20px 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: var(--graphite); }
+
+.entry { padding: 10px 0 10px 14px; border-left: 3px solid var(--rule); }
+.entry + .entry { margin-top: 6px; }
+.entry.chosen { border-left-color: var(--ink); }
+.entry-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.headword { font-family: var(--script); font-size: 20px; font-weight: 700; }
+.headword sup { margin-left: 1px; font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--graphite); }
+.origin { font-size: 15px; }
+.pron { font-family: var(--script); font-size: 15px; } /* 고정폭 글꼴에는 한글이 없어 ː 앞뒤가 벌어진다 */
+.len { padding: 1px 7px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.len.long { background: #fbe4df; color: #9c2c1b; }
+.len.short { background: #e9eef4; color: #3e4855; }
+.len.unknown { background: #f1f1ee; color: var(--graphite); }
+.definition { margin: 6px 0; font-size: 15px; line-height: 1.6; }
+.pos { color: var(--graphite); font-size: 13px; }
+.entry a { color: var(--blue); font-size: 13px; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mark, .evidence { animation: none; }
+}
