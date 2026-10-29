@@ -146,6 +146,7 @@ def word_answer(fail_at, error):
     # 요청 내용 탓 실패는 그 묶음만 남기고 다음 요청을 보낸다
     ({2}, LLMError("API 오류 400"), ["short", "undecided", "short"], 3, "API 오류 400"),
     ({2}, "not json", ["short", "undecided", "short"], 3, "응답 형식 오류"),
+    ({2}, LLMError("ReadTimeout"), ["short", "undecided", "short"], 3, "ReadTimeout"),  # 시간 초과도 그 묶음만
     # 한도 초과·연결 실패, 또는 연달아 두 번 실패하면(설정 오류 등) 남은 요청을 보내지 않는다
     ({2}, LLMError("API 오류 429", stop=True), ["short", "undecided", "undecided"], 2, "API 오류 429"),
     ({1, 2, 3}, LLMError("API 오류 400"), ["undecided", "undecided", "undecided"], 2, "API 오류 400"),
@@ -176,10 +177,10 @@ def test_repeated_sentence_sent_once(analyzer, tmp_path):
 
 def test_stop_after_failure(analyzer, tmp_path, monkeypatch):
     monkeypatch.setattr("core.judge.MAX_WORDS", 1)
-    fake = Fake(lambda p: LLMError("ReadTimeout", stop=True))
+    fake = Fake(lambda p: LLMError("ConnectError", stop=True))
     r = Judge(fake, tmp_path).resolve(analyzer.analyze("눈이 온다. 사과를 먹었다. 방화 혐의로 체포됐다."))
     assert len(fake.prompts) == 1  # 첫 요청이 실패하면 남은 요청은 보내지 않는다
-    assert {it.reason for it in r.undecided} == {"판별 필요: LLM 호출 실패(ReadTimeout)"} and len(r.undecided) == 3
+    assert {it.reason for it in r.undecided} == {"판별 필요: LLM 호출 실패(ConnectError)"} and len(r.undecided) == 3
 
 
 def test_no_call_without_undecided(analyzer, tmp_path):
@@ -298,7 +299,14 @@ def test_gemini_errors_become_llmerror():
     calls = []
     with pytest.raises(LLMError, match="ReadTimeout") as e:
         gemini(lambda r: calls.append(r) or timeout(r))("s", "p", {})
-    assert len(calls) == 1 and e.value.stop  # 다시 보내지 않는다
+    assert len(calls) == 1 and not e.value.stop  # 다시 보내지 않고, 다음 묶음은 보낸다
+
+    def refused(request):
+        raise httpx.ConnectError("refused", request=request)
+
+    with pytest.raises(LLMError, match="ConnectError") as e:
+        gemini(refused)("s", "p", {})
+    assert e.value.stop
 
 
 # 실제 호출(기준 문장 표의 기대값). JANGDAN_LIVE_LLM=1일 때만 돌리고, 응답은 .cache/llm에 남는다.

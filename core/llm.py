@@ -44,7 +44,9 @@ class Gemini:
         except errors.APIError as e:  # 요청 내용 탓(400)이면 다음 요청은 보낸다. 키·모델 이름 오류는 멈춘다
             stop = e.code in (401, 403, 404, 429) or e.code >= 500 or "api key" in str(e).lower()
             raise LLMError(f"API 오류 {e.code}", stop=stop) from e
-        except (httpx.HTTPError, ValueError) as e:  # 연결 실패·시간 초과, JSON이 아닌 응답 본문
+        except httpx.TimeoutException as e:  # 그 요청만 느린 경우가 많다. 그 묶음만 판별 필요로 남기고 다음 요청은 보낸다
+            raise LLMError(type(e).__name__) from e
+        except (httpx.HTTPError, ValueError) as e:  # 연결 실패, JSON이 아닌 응답 본문
             raise LLMError(type(e).__name__, stop=True) from e
         self.last_usage = r.usage_metadata
         if not r.text:
