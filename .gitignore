@@ -30,6 +30,8 @@ __pycache__/
 # 웹 화면(빌드 결과는 npm run build로 다시 만든다)
 node_modules/
 web/dist/
+extension/.output/
+extension/.wxt/
 
 # OS
 Thumbs.db

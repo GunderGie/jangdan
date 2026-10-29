@@ -30,6 +30,13 @@
 5. 서버를 켭니다: `uvicorn api.main:create_app --factory`. `http://localhost:8000`에서 화면이 열립니다.
 6. API만 쓸 때는 `POST /api/analyze`에 `{"text": "원고"}`를 보내면 장음 표시 결과와 근거를 돌려줍니다. `http://localhost:8000/docs`에서 시험할 수 있습니다.
 
+## 브라우저 확장
+
+Chrome에서 글을 선택하고 확장 아이콘을 누르면, 선택한 글의 장음을 팝업에 표시합니다. 선택한 글이 없으면 팝업에 직접 붙여 넣을 수 있습니다.
+
+1. `extension` 폴더에서 `npm install`, `npm run build`를 실행합니다. 분석 서버 주소의 기본값은 `http://localhost:8000`이며, 다른 서버를 쓰려면 빌드할 때 환경 변수 `WXT_API_BASE`에 주소를 넣습니다.
+2. Chrome의 `chrome://extensions`에서 개발자 모드를 켜고, 「압축해제된 확장 프로그램을 로드합니다」로 `extension/.output/chrome-mv3` 폴더를 불러옵니다.
+
 ## 데이터
 
 - 국립국어원의 한국어기초사전과 표준국어대사전의 전체 내려받기 파일을 사용합니다.
