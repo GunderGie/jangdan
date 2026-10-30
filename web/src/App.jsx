@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MAX, analyzeText } from './api.js'
+import Notice from './Notice.jsx'
 import Result from './Result.jsx'
 
 const SAMPLE =
@@ -94,14 +95,7 @@ export default function App() {
         </p>
       )}
 
-      <details className="notice">
-        <summary>판별 방식 안내</summary>
-        <ul>
-          <li>한국어기초사전을 먼저 따르고, 기초사전에 없는 단어는 표준국어대사전을 씁니다.</li>
-          <li>두 사전의 발음이 다를 수 있습니다. 표준국어대사전 발음 우선 적용과 링크는 추후 제공합니다.</li>
-          <li>뜻이 갈리는 단어는 LLM이 문맥으로 판별하므로 틀릴 수 있습니다.</li>
-        </ul>
-      </details>
+      <Notice />
 
       <footer className="colophon">발음과 뜻풀이: 국립국어원 한국어기초사전·표준국어대사전(CC BY-SA 2.0 KR)</footer>
     </main>

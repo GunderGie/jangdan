@@ -98,7 +98,8 @@ export default function Result({ ref, result, busy, useLlm, onRetry, onEdit, edi
   const byLlm = count((it) => it.method === 'llm')
   // 호출 실패와 형식이 틀린 답만 센다. 「문맥으로 정하지 못함」은 모델이 정상으로 답한 것이다.
   const llmFailed = count((it) => it.status === 'undecided' && /LLM (호출 실패|응답에)/.test(it.reason))
-  const llmMissing = useLlm && !result.meta?.llm && undecided > 0
+  const llmLimited = useLlm && result.meta?.llm_limited && undecided > 0
+  const llmMissing = useLlm && !result.meta?.llm && !result.meta?.llm_limited && undecided > 0
 
   return (
     <section className="result" ref={ref} tabIndex={-1} aria-label="장음 표시 결과">
@@ -132,6 +133,7 @@ export default function Result({ ref, result, busy, useLlm, onRetry, onEdit, edi
       <p className="hint">
         단어를 누<span className="mark" aria-hidden="true">ː</span>르면 표시한 까닭이 나옵니다.
         {llmMissing && ' 서버에 LLM 키가 없어 문맥 판별은 하지 않았습니다.'}
+        {llmLimited && ' 오늘 쓸 수 있는 문맥 판별 횟수를 다 써서 문맥 판별은 하지 않았습니다.'}
       </p>
       <div className="actions">
         <button type="button" className="primary" onClick={copy}>
