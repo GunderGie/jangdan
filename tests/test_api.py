@@ -70,6 +70,32 @@ def test_bad_input(client):
     assert r.status_code == 411
 
 
+def test_rate_limit(analyzer, tmp_path):
+    from api.main import create_app
+    c = TestClient(create_app(analyzer, Judge(Fake(), tmp_path), rate_per_min=2))
+    ask = lambda ip: c.post("/api/analyze", json={"text": "사람", "llm": False}, headers={"x-forwarded-for": ip})
+    assert [ask("1.1.1.1, 9.9.9.9").status_code for _ in range(3)] == [200, 200, 429]
+    assert ask("1.1.1.1, 8.8.8.8").status_code == 200  # 앞쪽 값은 꾸밀 수 있어 끝의 주소로 센다
+    assert [ask(f"2001:db8:0:1::{n}").status_code for n in (1, 2, 3)] == [200, 200, 429]  # IPv6는 /64 단위
+
+
+def test_rate_window():
+    from api.main import RateLimit
+    rate = RateLimit(1)
+    assert (rate.allow("a", 0), rate.allow("a", 59), rate.allow("a", 60.5), rate.allow("b", 59)) == (True, False, True, True)
+
+
+def test_llm_daily_limit(analyzer, tmp_path):
+    from api.main import create_app
+    fake = Fake()
+    c = TestClient(create_app(analyzer, Judge(fake, tmp_path), llm_per_day=1))
+    first = c.post("/api/analyze", json={"text": "하늘에서 눈이 내린다."}).json()
+    second = c.post("/api/analyze", json={"text": "눈이 온다."}).json()  # 한도를 다 쓰면 LLM 없이 돌려준다
+    assert (first["meta"]["llm"], first["meta"]["llm_limited"], fake.calls) == ("fake", False, 1)
+    assert (second["meta"]["llm"], second["meta"]["llm_limited"]) == (None, True)
+    assert next(it for it in second["items"] if it["lemma"] == "눈")["status"] == "undecided"
+
+
 def test_db_error(analyzer, tmp_path):
     import sqlite3
     from api.main import create_app
