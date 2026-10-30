@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { browser } from 'wxt/browser'
 import { MAX, analyzeText } from '../../../web/src/api.js'
+import Notice from '../../../web/src/Notice.jsx'
 import Result from '../../../web/src/Result.jsx'
 
 // 아이콘을 누른 탭에서 선택한 글(프레임 안 포함)을 읽는다.
@@ -135,6 +136,7 @@ export default function App() {
         </p>
       )}
 
+      <Notice />
       <footer className="colophon">발음과 뜻풀이: 국립국어원 한국어기초사전·표준국어대사전(CC BY-SA 2.0 KR)</footer>
     </main>
   )

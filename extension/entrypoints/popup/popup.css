@@ -6,5 +6,6 @@ body { width: 420px; }
 .popup .masthead p { margin: 0 0 12px; font-size: 13px; }
 .popup textarea.sheet { min-height: calc(var(--lh) * 5 + var(--lh) * 0.85); }
 .popup .primary, .popup .secondary { min-height: 42px; font-size: 15px; }
-.popup .colophon { margin-top: 14px; font-size: 11px; }
+.popup .notice { margin-top: 16px; font-size: 12px; }
+.popup .colophon { margin-top: 8px; font-size: 11px; }
 .popup .evidence { margin: auto; border-radius: 12px; max-height: 92vh; }

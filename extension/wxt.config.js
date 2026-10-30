@@ -1,10 +1,10 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'wxt'
 
-// 확장이 부르는 분석 서버. 배포한 서버로 빌드하려면 WXT_API_BASE에 주소를 준다.
+// 확장이 부르는 분석 서버(기본은 공개 서버). 로컬 서버로 빌드하려면 WXT_API_BASE=http://localhost:8000을 준다.
 // WXT가 .env를 config 평가 뒤에 읽으므로 manifest·vite 함수 안에서 읽는다.
 function apiBase() {
-  const url = new URL(process.env.WXT_API_BASE || 'http://localhost:8000')
+  const url = new URL(process.env.WXT_API_BASE || 'https://jangdan-436361020679.asia-northeast3.run.app')
   if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error(`WXT_API_BASE는 http(s) 주소여야 한다: ${url.href}`)
   return url
 }
