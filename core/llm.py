@@ -1,4 +1,4 @@
-"""LLM 공급자. 임시로 Gemini 무료 등급을 쓴다. 공급자는 (system, prompt, schema) → JSON 문자열만 맞추면 바꿀 수 있다."""
+"""LLM 공급자. Gemini API를 쓴다. 공급자는 (system, prompt, schema) → JSON 문자열만 맞추면 바꿀 수 있다."""
 import os
 
 import httpx

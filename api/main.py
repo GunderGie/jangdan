@@ -36,7 +36,7 @@ def env_int(name):
 
 
 def client_ip(request):
-    # 끝 값을 접속 주소로 본다(Cloud Run에 직접 접속할 때의 커뮤니티 보고 기준, 공식 문서는 확인하지 못함). 앞쪽 값은 요청자가 꾸밀 수 있다.
+    # 끝 값을 접속 주소로 본다. 앞쪽 값은 요청자가 꾸밀 수 있다(Cloud Run에서 꾸민 값을 넣어도 끝 값은 실제 주소였다).
     # IPv6는 한 사용자가 /64 안에서 주소를 바꿀 수 있어 /64 단위로 센다.
     forwarded = ",".join(request.headers.getlist("x-forwarded-for"))
     ip = forwarded.rsplit(",", 1)[-1].strip() if forwarded else (request.client.host if request.client else "")
@@ -145,6 +145,6 @@ def create_app(analyzer=None, judge=None, rate_per_min=None, llm_per_day=None):
                        "llm_limited": limited, "elapsed_ms": round((time.perf_counter() - start) * 1000)}
         return out
 
-    if WEB_DIST.exists():  # 6단계 화면(빌드 결과)을 같은 주소에서 내보낸다
+    if WEB_DIST.exists():  # 화면(빌드 결과)을 같은 주소에서 내보낸다
         app.mount("/", StaticFiles(directory=WEB_DIST, html=True), name="web")
     return app
