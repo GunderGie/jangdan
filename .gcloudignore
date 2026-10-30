@@ -1,0 +1,6 @@
+# Cloud Run 배포(gcloud run deploy --source)로 올리는 소스에서 뺀다. 비밀 값(.env)과 사전 DB(data/)는 .gitignore에 있다.
+.git/
+.gcloudignore
+#!include:.gitignore
+extension/
+tests/

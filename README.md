@@ -2,6 +2,8 @@
 
 표준발음법에 따라 길게 발음해야 하는 음절(장음)을 표시하고 판단 근거를 보여 주는 도구입니다. 
 
+공개 서버: https://jangdan-436361020679.asia-northeast3.run.app
+
 ## 배경
 
 표준발음법은 모음의 장단을 구별해 발음하는 것을 원칙(제3장 제6항, 제7항)으로 하지만, 현대 서울·경기 화자는 장단을 거의 구별하지 못합니다. 장단음은 동형이의어, 활용형에 따라 달라져 규칙 기반 판단은 한계가 있습니다.
@@ -34,8 +36,17 @@
 
 Chrome에서 글을 선택하고 확장 아이콘을 누르면, 선택한 글의 장음을 팝업에 표시합니다. 선택한 글이 없으면 팝업에 직접 붙여 넣을 수 있습니다.
 
-1. `extension` 폴더에서 `npm install`, `npm run build`를 실행합니다. 분석 서버 주소의 기본값은 `http://localhost:8000`이며, 다른 서버를 쓰려면 빌드할 때 환경 변수 `WXT_API_BASE`에 주소를 넣습니다.
+1. `extension` 폴더에서 `npm install`, `npm run build`를 실행합니다. 분석 서버 주소의 기본값은 공개 서버이며, 로컬 서버를 쓰려면 빌드할 때 환경 변수 `WXT_API_BASE`에 `http://localhost:8000`을 넣습니다.
 2. Chrome의 `chrome://extensions`에서 개발자 모드를 켜고, 「압축해제된 확장 프로그램을 로드합니다」로 `extension/.output/chrome-mv3` 폴더를 불러옵니다.
+
+## 배포
+
+Google Cloud Run(서울 리전)에 배포했습니다. 사전 DB는 Turso에서 읽고, 키는 Secret Manager에 둡니다.
+
+1. 이미지를 빌드합니다: `gcloud builds submit --machine-type=e2-standard-2 --tag <이미지 주소>`
+2. 서비스를 배포합니다: `gcloud run deploy jangdan --image <이미지 주소> --memory 1Gi --max-instances 1 --allow-unauthenticated`
+   - 환경 변수: `JANGDAN_DB_SOURCE=turso`, `TURSO_DATABASE_URL`, `JANGDAN_RATE_PER_MIN`(주소당 분당 요청 수), `JANGDAN_LLM_PER_DAY`(하루 LLM 호출 수. 넘으면 문맥 판별 없이 답합니다). 두 한도는 값이 없거나 0이면 두지 않습니다.
+   - 비밀값(`--set-secrets`): `GEMINI_API_KEY`, `TURSO_AUTH_TOKEN`
 
 ## 데이터
 
